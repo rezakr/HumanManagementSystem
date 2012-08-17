@@ -9,12 +9,12 @@ namespace db\adaptor;
 define('__NumberOfTriesForLuck',16); 
 
 abstract class Adaptor {
-    protected $path;
-    protected $array;
-    protected $file;
+    protected $_path;
+    protected $_array;
+    protected $_file;
     public function __construct($filePath) {
-        $this->array = array();
-        $this->path=$filePath;
+        $this->_array = array();
+        $this->_path=$filePath;
         // should load the path to $db, but for now it's just an empty array
         $this->_updateArray();
     }
@@ -24,8 +24,8 @@ abstract class Adaptor {
     abstract protected function _decode($array);
 
     protected function _has($id){
-        if(isset($this->array[$id]))
-            if($this->array[$id]==null)
+        if(isset($this->_array[$id]))
+            if($this->_array[$id]==null)
                 return false;
             else 
                 return true;
@@ -34,24 +34,24 @@ abstract class Adaptor {
     }
     
     protected function _updateArray(){
-        if(file_exists($this->path)){
-            $fileContent = file_get_contents($this->path);
-            $this->array = $this->_decode($fileContent);
+        if(file_exists($this->_path)){
+            $fileContent = file_get_contents($this->_path);
+            $this->_array = $this->_decode($fileContent);
         }else{
-            $this->array = array();
+            $this->_array = array();
         }
     }
     
     protected function _lockDB(){
         $tempLock = false;
-        $this->file = fopen($this->path,'a'); 
-        $tempLock= flock($this->file, LOCK_EX);
+        $this->_file = fopen($this->_path,'a'); 
+        $tempLock= flock($this->_file, LOCK_EX);
         return $tempLock;
     }
     protected function _unlockDB(){
-        if(file_exists($this->path)){
-            flock($this->file, LOCK_UN);
-            fclose($this->file); 
+        if(file_exists($this->_path)){
+            flock($this->_file, LOCK_UN);
+            fclose($this->_file); 
         }else{
             //Error in unlocking the wrong file
         }
@@ -59,8 +59,8 @@ abstract class Adaptor {
     public function getAll(){
         $tempArray = array();
         $i=0;
-        if(sizeof($this->array==0)) return $tempArray;
-        foreach ($this->array as $arr){
+        if(sizeof($this->_array==0)) return $tempArray;
+        foreach ($this->_array as $arr){
             $tempSingleEntry = $arr;
             if($tempSingleEntry != null) 
                 $tempArray[$i] = $tempSingleEntry;
@@ -71,7 +71,7 @@ abstract class Adaptor {
         
     public function get($id){
         if($this->_has($id)){
-            return $this->array[$id];
+            return $this->_array[$id];
         }else{
             return null;
             // Maybe some error/exception?
@@ -80,15 +80,15 @@ abstract class Adaptor {
     
     public function add($data){
         // should I check the structure of $data too?
-        $this->array[]=$data;
-        return sizeof($this->array);
+        $this->_array[]=$data;
+        return sizeof($this->_array);
     }
     
     public function update($id, $data){
         // Maybe should change next line with get();
         if($this->_has($id)){
             foreach ($data as $key => $value){
-                $this->array[$id][$key]=$value;            
+                $this->_array[$id][$key]=$value;            
             }
         }else{
             // Maybe some error/exception?
@@ -97,48 +97,54 @@ abstract class Adaptor {
 
     public function delete($id){
         if($this->_has($id))
-            $this->array[$id]=null;
+            $this->_array[$id]=null;
     }
 
     public function save(){
-        file_put_contents($this->path, $this->_encode($this->array));        
+        file_put_contents($this->_path, $this->_encode($this->_array));        
     }
     
-    public function find($param){
+    public function recursiveFind($array, $params){
+        if(sizeof($params)==0) {
+            return $array;
+        }
+        $param = array_pop($params);
+
+        $oldArray= $this->recursiveFind($array, $params);
         $tempArray = array();
-        
-        $i=0;
-        foreach ($this->array as $arr){
-            if(!isset($arr[$param[0]])){
-                $i++;
+        foreach ($oldArray as $key => $arr) {
+            if(!isset($arr[$param[0]]))
                 continue;
-            }
             switch ($param[1]){
                 case ">":
                     if($arr[$param[0]]>$param[2])
-                        $tempArray[$i] = $arr;
+                        $tempArray[$key] = $arr;
                     break;
                 case ">=":
                     if($arr[$param[0]]>$param[2] or $arr[$param[0]]==$param[2])
-                        $tempArray[$i] = $arr;
+                        $tempArray[$key] = $arr;
                     break;
                 case "<":
                     if($arr[$param[0]]<$param[2])
-                        $tempArray[$i] = $arr;
+                        $tempArray[$key] = $arr;
                     break;
                 case "<=":
                     if($arr[$param[0]]<$param[2] or $arr[$param[0]]==$param[2])
-                        $tempArray[$i] = $arr;
+                        $tempArray[$key] = $arr;
                     break;
                 case "==":
                     if($arr[$param[0]]==$param[2])
-                        $tempArray[$i] = $arr;
+                        $tempArray[$key] = $arr;
                     break;
             }
-            $i++;
         }
+        unset($array);
         return $tempArray;
-
+    }
+    
+    public function find($param){
+        return $this->recursiveFind($this->_array, $param);
+        
     }
     
     public function getLockForWrite(){

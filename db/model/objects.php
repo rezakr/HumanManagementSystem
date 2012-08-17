@@ -43,11 +43,16 @@ abstract class objects {
     
     public function __get($key)
     {
+        $functionName = '__get'.ucwords($key);
+        if(method_exists($this, $functionName))
+                return call_user_func(array($this, $functionName));
+                //return call_user_func('self::' . $functionName);
+
+                
+
         if($key=='id' && (!is_null($this->_id)))
             return $this->_id;
         if(isset($this->_array[$key])){
-            echo 'key =' . $key ;
-            echo ' value = '.$this->_array[$key];
             return $this->_array[$key];
         }
     }
@@ -59,6 +64,10 @@ abstract class objects {
             $this->_array[$key] = $value;
         }
     }
+    public function __call($method, $args){
+        echo 'No '.$method;        
+    }
+
 
 }
 

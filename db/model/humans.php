@@ -22,26 +22,43 @@ class humans extends objects {
     protected $_tempArray=array('fname','lname', 'gender','fatherID','motherID','birthday','dead');
     //or db. I'll think on it after doing this.
     
-    protected function __getSons(){
+    protected function __isOrphan(){
         
     }
-    
-    protected function __getDaughters(){
+    protected function __getSons(){
+        $params = $this->__addParentGenderToSearch();
+        $params[] = array('gender','==',1);
+        return $this->__searchInDB($params);                
     }
-    protected function __getChildern(){
-        $temp=array();
+    protected function __addParentGenderToSearch($params=null){
         if($this->gender==true)
-            $searchArray = array('fatherID','==',$this->_id);
+            $searchQuery = array('fatherID','==',$this->_id);
         else
-            $searchArray = array('motherID','==',$this->_id);
-            
-        $result=$this->_db->find($searchArray);
+            $searchQuery = array('motherID','==',$this->_id);
+        if($params==null) $params = array(); 
+        $params[] = $searchQuery;
+        return $params;
+    }
+    protected function __searchInDB($params){
+        $temp=array();
 
+        $result=$this->_db->find($params);
+        
         foreach(array_keys($result) as $key){
             $temp[]=new humans($this->_db,$result[$key],$key);
         }
-        
         return $temp;
+    }
+    
+    protected function __getDaughters(){
+        $params = $this->__addParentGenderToSearch();
+        $params[] = array('gender','==',0);
+        return $this->__searchInDB($params);        
+    }
+    
+    protected function __getChildren(){
+        $params = $this->__addParentGenderToSearch();
+        return $this->__searchInDB($params);
         
     }
     protected function __isTheOldestInFamily(){
@@ -82,20 +99,26 @@ class humans extends objects {
             echo 'there';
             $p->motherID=$this->_id;
         }
-        
+        // $son will get father's lastName? 
+        // if it's the case, it have to be recursive for all other sons/daughters
         // $son should be saved after this, it's developer's job.
     }
-    
-    public function __get($key){
+    public function __toString(){
+        $str="id " . $this->id;
+        $str.= 'name : ' .$this->fname;
+        $str.= ' last name : ' .$this->lname;
+        $str.= ' gender : '; 
+        if ($this->gender == true) $str.= ' male ';
+        if ($this->gender == false) $str.= 'female';
         
-        if($key=='getChildern'){
-            $temp = $this->__getChildern();
-            return $temp;
-        }
-        
-        return parent::__get($key);
+        $str.= ' fatherID : ' .$this->fatherID;
+        $str.= ' motherID : ' .$this->motherID;
+        $str.= ' birthday : ' .$this->birthday;
+        $str.= ' and is dead? : ' .$this->dead;
+        $str.="!";
+        echo $str;
+        return $str;
     }
-
 }
 
 ?>
