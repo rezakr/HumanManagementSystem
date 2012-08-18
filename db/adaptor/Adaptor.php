@@ -24,6 +24,8 @@ abstract class Adaptor {
     abstract protected function _decode($array);
 
     protected function _has($id){
+//        if(sizeof($this->_array)==0)
+//            return false;
         if(isset($this->_array[$id]))
             if($this->_array[$id]==null)
                 return false;
@@ -109,9 +111,13 @@ abstract class Adaptor {
             return $array;
         }
         $param = array_pop($params);
+        if(sizeof($param)!=3)
+            throw new \Exception("Wrong parameters in Find");
 
         $oldArray= $this->recursiveFind($array, $params);
         $tempArray = array();
+        if(sizeof($oldArray)==0 ) 
+            return $tempArray;
         foreach ($oldArray as $key => $arr) {
             if(!isset($arr[$param[0]]))
                 continue;
@@ -143,7 +149,10 @@ abstract class Adaptor {
     }
     
     public function find($param){
-        return $this->recursiveFind($this->_array, $param);
+        $query = $this->recursiveFind($this->_array, $param);
+        if(sizeof($query)==0)
+            return null;
+        return $query;
         
     }
     

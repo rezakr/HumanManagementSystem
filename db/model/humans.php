@@ -19,11 +19,17 @@ require_once 'objects.php';
 // Or maybe humans
 
 class humans extends objects {
-    protected $_tempArray=array('fname','lname', 'gender','fatherID','motherID','birthday','dead');
+    protected $_tempArray=array('fname','lname', 'gender','fatherID','motherID','birthdate','dead');
     //or db. I'll think on it after doing this.
     
     protected function __isOrphan(){
-        
+       $father = $this->__getFather();
+       $mother = $this->__getMother();
+       
+       if($father->dead && $mother->dead)
+           return true;
+       else 
+           return false;
     }
     protected function __getSons(){
         $params = $this->__addParentGenderToSearch();
@@ -44,6 +50,7 @@ class humans extends objects {
 
         $result=$this->_db->find($params);
         
+        if(sizeof($result)==0 ) return $temp;
         foreach(array_keys($result) as $key){
             $temp[]=new humans($this->_db,$result[$key],$key);
         }
@@ -55,6 +62,43 @@ class humans extends objects {
         $params[] = array('gender','==',0);
         return $this->__searchInDB($params);        
     }
+    protected function __getFather(){
+        $fatherQuery = $this->_db->get($this->fatherID);
+        if (is_null($fatherQuery)) return null;
+        return new humans($this->_db, $fatherQuery, $this->fatherID);        
+    }
+    protected function __getMother(){
+        $motherQuery = $this->_db->get($this->motherID);
+        if (is_null($motherQuery)) return null;
+        return new humans($this->_db, $motherQuery, $this->motherID);                
+    }
+    protected function __setBirthdate($arg){
+        $newBirthdate = $arg;
+
+        $mother = $this->__getMother();
+        $father = $this->__getFather();
+
+        if(!is_null($mother))
+            if($this->__hasBirthdayGap($mother->birthdate, $newBirthdate))
+                    throw new \Exception("You can't do that! the gap between mother's birthday and child is too low");
+
+        if(!is_null($father))
+            if($this->__hasBirthdayGap($father->birthdate, $newBirthdate))
+                    throw new \Exception("You can't do that! the gap between father's birthday and child is too low");
+
+        $children = $this->__getChildren();
+        if(sizeof($children)!=0){
+            foreach ($children as $child) {
+                if($this->__hasBirthdayGap($newBirthdate, $child->birthdate)){
+                        throw new \Exception("You can't do that! the gap between parents' birthday and child is too low");
+                }
+            }
+        }   
+        $this->_array['birthdate']=$newBirthdate;
+        var_dump($arg);
+        echo 'I am here';
+    }
+    
     
     protected function __getChildren(){
         $params = $this->__addParentGenderToSearch();
@@ -62,19 +106,83 @@ class humans extends objects {
         
     }
     protected function __isTheOldestInFamily(){
-        
+        $father = $this->__getFather();
+        // No parent to decide/can throw exception too.
+        if($father == null) 
+            return true;
+        if($father->dead == 0)
+            return false;
+        $children = $father->chidren;
+        foreach ($children as $child) {
+            if($this->birthdate < $child->birthdate)
+                if($child->dead == 0)
+                    return false;
+        }
+        return true;
     }
     protected function __getOldestBrother(){
-        
+        $father = $this->__getFather();
+        // No parent to decide/can throw exception too.
+        if($father == null) 
+            return null;
+        $sons = $father->sons;
+        $oldestBrother = $sons[0];
+        foreach ($sons as $son) {
+            if($oldestBrother->birthdate > $son->birthdate)
+                $oldestBrother = $son;
+        }
+        return $oldestBrother;        
     }
     protected function __getOldestSister(){
+        $father = $this->__getFather();
+        // No parent to decide/can throw exception too.
+        if($father == null) 
+            return null;
+        $daughters = $father->daughters;
+        $oldestSister = $daughters[0];
+        foreach ($daughters as $daughter) {
+            if($oldestSister->birthdate > $daughter->birthdate)
+                $oldestSister = $daughter;
+        }
+        return $oldestSister;        
         
-    }
+    }    
     protected function __getYoungestBrother(){
+        $father = $this->__getFather();
+        // No parent to decide/can throw exception too.
+        if($father == null) 
+            return null;
+        $sons = $father->sons;
+        $youngestBrother = $sons[0];
+        foreach ($sons as $son) {
+            if($youngestBrother->birthdate < $son->birthdate)
+                $youngestBrother = $son;
+        }
+        return $youngestBrother;        
         
     }
-    protected function __getYoungestSister(){
         
+    protected function __getYoungestSister(){
+        $father = $this->__getFather();
+        // No parent to decide/can throw exception too.
+        if($father == null) 
+            return null;
+        $daughters = $father->daughters;
+        $youngestSister = $daughters[0];
+        foreach ($daughters as $daughter) {
+            if($youngestSister->birthdate < $daughter->birthdate)
+                $youngestSister = $daughter;
+        }
+        return $youngestSister;         
+    }
+    protected function __hasBirthdayGap($parent, $child){
+        if(is_null($parent) || is_null($child))
+            return false;
+        if($parent + (10*3600*24*365) > $child ){
+            echo 'yes has a birthday gap';
+            return true;
+        }
+        return false;
     }
     protected function dies(){
         $this->dead = true;
@@ -113,10 +221,9 @@ class humans extends objects {
         
         $str.= ' fatherID : ' .$this->fatherID;
         $str.= ' motherID : ' .$this->motherID;
-        $str.= ' birthday : ' .$this->birthday;
+        $str.= ' birthdate : ' . date('Y-m-d', $this->birthdate);
         $str.= ' and is dead? : ' .$this->dead;
         $str.="!";
-        echo $str;
         return $str;
     }
 }
