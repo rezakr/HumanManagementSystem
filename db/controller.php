@@ -13,18 +13,28 @@ namespace db;
 class controller {
     protected $_result;
     protected $_repository;
-    public function __construct(){
+    protected $_args = array();
+
+    public function __construct($arguments = NULL){
         $this->_repository = new \db\model\repository();
 
         $this->_result['error'] = false;
         $this->_result['body'] = "Working in construct of controller\n";
         $this->_result['message'] = "";
+
+        if (!is_null($arguments) && is_array($arguments))
+            $this->_args = $arguments;
     }
     public function __destroy(){
         echo "here to destroy";
     }
-    public function create($argv){
-        parse_str(implode('&', $argv),$arguments);
+
+    public function getRequestParameters() {
+        return $this->_args;
+    }
+
+    public function create(){
+        parse_str(implode('&', $this->getRequestParameters()),$arguments);
         // Have to check to the arguements;
         
         $refinedArguments = $this->__refine($arguments);
@@ -37,8 +47,8 @@ class controller {
         return $this->_result;
     }
     
-    public function update($id,$argv){
-        parse_str(implode('&', $argv),$arguments);
+    public function update($id){
+        parse_str(implode('&', $this->getRequestParameters()),$arguments);
         try{
             $updatePerson = $this->_repository->get($id);
         }catch(\Exception $e){
@@ -100,14 +110,16 @@ class controller {
         return $this->_result;
             
     }
-    public function show($id, $argv) {
+    public function show($id) {
         try{
             $showPerson = $this->_repository->get($id);
         }catch(\Exception $e){
             $this->_result['error'] = true;
             $this->_result['message'] = $e->getMessage();
             return $this->_result;
-        }    
+        }
+
+	$argv = $this->getRequestParameters();
         if(empty($argv)){
             $this->_result['body'] = "".$showPerson;
         }else{
@@ -145,9 +157,11 @@ class controller {
         return $this->_result;
         
     }
-    private function __callBooleanFunction($id, $functionName,$argv=null){
+    private function __callBooleanFunction($id, $functionName){
         $functionName= "is".  substr_replace(ucwords($functionName),"",-1);
         $person = $this->_repository->get($id);
+
+        $argv = $this->getRequestParameters();
         if(empty($argv)){
             $result = $person->$functionName();
         }else{

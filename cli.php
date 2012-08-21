@@ -11,7 +11,7 @@
     $filename = array_shift($argv);
     $command = array_shift($argv);
     
-    $controller = new \db\controller();
+    $controller = new \db\controller($argv);
     $result['message'] = "All Good and easy\n";
     $result['body'] = "You can run it with create, update \$id, show \$id, and more\n";
     switch ($command) {
