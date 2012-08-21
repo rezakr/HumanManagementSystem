@@ -61,7 +61,8 @@ abstract class Adaptor {
     public function getAll(){
         $tempArray = array();
         $i=0;
-        if(sizeof($this->_array==0)) return $tempArray;
+        if(empty($this->_array)) 
+            return $tempArray;
         foreach ($this->_array as $arr){
             $tempSingleEntry = $arr;
             if($tempSingleEntry != null) 

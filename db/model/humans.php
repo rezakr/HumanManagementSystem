@@ -22,7 +22,7 @@ class humans extends objects {
     protected $_tempArray=array('fname','lname', 'gender','fatherID','motherID','birthdate','dead');
     //or db. I'll think on it after doing this.
     
-    protected function __isOrphan(){
+    public function isOrphan(){
        $father = $this->__getFather();
        $mother = $this->__getMother();
        
@@ -105,7 +105,7 @@ class humans extends objects {
         return $this->__searchInDB($params);
         
     }
-    protected function __isTheOldestInFamily(){
+    public function isTheOldestInFamily(){
         $father = $this->__getFather();
         // No parent to decide/can throw exception too.
         if($father == null) 
@@ -126,6 +126,9 @@ class humans extends objects {
         if($father == null) 
             return null;
         $sons = $father->sons;
+        if(empty($sons)) 
+            return null;
+
         $oldestBrother = $sons[0];
         foreach ($sons as $son) {
             if($oldestBrother->birthdate > $son->birthdate)
@@ -139,6 +142,8 @@ class humans extends objects {
         if($father == null) 
             return null;
         $daughters = $father->daughters;
+        if(empty($daughters)) 
+            return null;
         $oldestSister = $daughters[0];
         foreach ($daughters as $daughter) {
             if($oldestSister->birthdate > $daughter->birthdate)
@@ -153,6 +158,8 @@ class humans extends objects {
         if($father == null) 
             return null;
         $sons = $father->sons;
+        if(empty($sons)) 
+            return null;
         $youngestBrother = $sons[0];
         foreach ($sons as $son) {
             if($youngestBrother->birthdate < $son->birthdate)
@@ -168,6 +175,8 @@ class humans extends objects {
         if($father == null) 
             return null;
         $daughters = $father->daughters;
+        if(empty($daughters)) 
+            return null;
         $youngestSister = $daughters[0];
         foreach ($daughters as $daughter) {
             if($youngestSister->birthdate < $daughter->birthdate)
@@ -184,7 +193,7 @@ class humans extends objects {
         }
         return false;
     }
-    protected function dies(){
+    public function dies(){
         $this->dead = true;
     }
     public function isSiblingOf(humans $p){
@@ -213,16 +222,40 @@ class humans extends objects {
     }
     public function __toString(){
         $str="id " . $this->id;
-        $str.= 'name : ' .$this->fname;
-        $str.= ' last name : ' .$this->lname;
-        $str.= ' gender : '; 
-        if ($this->gender == true) $str.= ' male ';
-        if ($this->gender == false) $str.= 'female';
-        
-        $str.= ' fatherID : ' .$this->fatherID;
-        $str.= ' motherID : ' .$this->motherID;
-        $str.= ' birthdate : ' . date('Y-m-d', $this->birthdate);
-        $str.= ' and is dead? : ' .$this->dead;
+        if(!is_null($this->_array['fname']))
+            $str.= " name : " .$this->fname;
+        else
+            $str.= " Unknown name";
+        if(!is_null($this->_array['lname']))
+            $str.= "\t last name : " .$this->lname;
+        else 
+            $str.="\t\t";
+
+        if(!is_null($this->_array['gender'])){
+            $str.= "\t gender : "; 
+            if ($this->gender == true) $str.= ' male ';
+            if ($this->gender == false) $str.= 'female';
+        }else 
+            $str.="\t\t";
+        if(!is_null($this->_array['fatherID']))
+            $str.= "\t fatherID : " .$this->fatherID;
+        else 
+            $str.="\t\t";
+        if(!is_null($this->_array['motherID']))
+            $str.= "\t motherID : " .$this->motherID;
+        else 
+            $str.="\t\t";
+        if(!is_null($this->_array['birthdate']))            
+            $str.= "\t birthdate : " . date('Y-m-d', $this->birthdate);
+        else 
+            $str.="\t\t";
+        if(!is_null($this->_array['dead'])){
+            if ($this->dead == true) $str.= "\t dead ";
+            if ($this->dead == false) $str.= "\t alive";
+        }
+        else 
+            $str.="\t\t";
+
         $str.="!";
         return $str;
     }

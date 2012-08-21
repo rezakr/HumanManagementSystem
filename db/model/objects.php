@@ -32,13 +32,21 @@ abstract class objects {
             }
         }
     }
-
+    public function update($array){
+        foreach ($this->_array as $key => $value) {
+            if(isset($array[$key]))
+                $this->_array[$key] = $array[$key];
+        }
+    }
     public function save(){
+        $id = $this->_id;
         if(is_null($this->_id))
-            $this->_id=$this->_db->add($this->_array);
+            $id = $this->_id=$this->_db->add($this->_array);
         else
             $this->_db->update($this->_id,$this->_array);
         $this->_db->save();
+        $this->_db->releaseLockForWrite();
+        return $id;
     }
     
     public function __get($key)
@@ -52,6 +60,10 @@ abstract class objects {
         if(isset($this->_array[$key])){
             return $this->_array[$key];
         }
+        if(in_array($key, $this->_tempArray)){
+            return null;
+        }
+        throw new \Exception("$key wasn't found");
     }
     
     public function __set($key, $value)
@@ -66,9 +78,7 @@ abstract class objects {
             $this->_array[$key] = $value;
         }
     }
-    public function __call($method, $args){
-        echo 'No '.$method;        
-    }
+
 
 
 }

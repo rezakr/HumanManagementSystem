@@ -37,21 +37,32 @@ class repository {
         $this->_repository->releaseLockForWrite();        
     }
 
-        
-    public function create(){
+    public function create($array = null){
         $lock = $this->__getLock();
 
-        $temp = new humans($this->_repository);
+        $temp = new humans($this->_repository,$array);
         //Change lock to some other function;
         return $temp;
     }
 
+    public function getAll(){
+        $lock = $this->__getLock();
+        $tempArray=array();
+        $array= $this->_repository->getAll();
+        if(empty($array))
+            return array();
+        foreach ($array as $key => $arr) {
+            $tempArray[]=new humans($this->_repository,$arr, $key);
+            
+        }
+        return $tempArray;  
+    }
     // returns a humans class;
     public function get($id){
         $lock = $this->__getLock();
         $array = $this->_repository->get($id);
         if(empty($array))
-            return null; // maybe an exception
+            throw new \Exception("$id was not found");
         else{
             $temp = new humans($this->_repository,$array,$id);
             return $temp;
