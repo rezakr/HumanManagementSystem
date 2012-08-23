@@ -54,7 +54,7 @@ class controller {
     public function __destruct(){
         $this->_repository->cancelChanges();
     }
-    public function render($view,$param){
+    public function render($view,$param=null){
         include $view;
     }
     public function create(){

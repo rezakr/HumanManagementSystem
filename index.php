@@ -29,6 +29,7 @@
     $controller = new db\controller($arguments);
     $command = array_shift($arguments);
     $link = "Location: /index.php";
+    $result['error']=false;
     switch ($command) {
         case "new":
             $controller->render('view/new.php');
@@ -97,6 +98,12 @@
             break;
         case "help":
             $result['error'] = false;
+            $result['body'] = "Use create fname=name lname=family gender=1 birthdate=1900-01-01 fatherID=id motherID=id\n"
+            ."or update id something=newValue or adopt a son or daughter \n"
+                ."to show the information you can use : \nshow all \n"
+                ."show id\n"
+                ."show id sons/daughters/children/father/mother or more\n"
+                ."show id theOldestInFamily? or orphan?\n";
         default:
             break;
     }
