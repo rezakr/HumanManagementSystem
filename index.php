@@ -5,7 +5,6 @@
         <title></title>
     </head>
     <body>
-        <pre>
         <?php 
         function __autoload($class_name) {
             include  $cat = str_replace('\\', '/', $class_name) . '.php';                
@@ -21,7 +20,7 @@
     echo '<br/>';
     $argString=str_replace("/"," ",$_SERVER['QUERY_STRING']);
     $argString=trim(str_replace("&"," ",$argString));
-    
+
     if(empty($argString)){
         $argString= "show all";
     }
@@ -60,9 +59,8 @@
             $param['fatherID']=$result['result']->fatherID;
             $param['birthdate']=date('y-m-d', $result['result']->birthdate);
             $param['dead']=$result['result']->dead;
-            include('view/edit.php');
-
-            var_dump($param);
+            $controller->render('view/edit.php', $param);
+            //include('view/edit.php');
             break;
         case "update":
             if($_SERVER['REQUEST_METHOD'] == "POST"){
@@ -82,8 +80,10 @@
             $controller->setRequestParameters($arguments);
             if(is_numeric($id))
                 $id=(int)$id;
-            else
+            else{
+                echo "<a href='/index.php/new/'>new person</a>";
                 $id="all";
+            }
             $result = $controller->show($id);
             if($result['error']) continue;
             if(!is_array($result['result'])){
@@ -103,5 +103,4 @@
     if ($result['error'])
         echo $result['message']."\n";
     ?>
-    </pre>
 </body>

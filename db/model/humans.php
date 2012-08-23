@@ -72,6 +72,11 @@ class humans extends objects {
         if (is_null($motherQuery)) return null;
         return new humans($this->_db, $motherQuery, $this->motherID);                
     }
+    protected function __getDateOfBirth(){
+        if(!is_null($this->_array['birthdate']))            
+            return date('Y-m-d', $this->birthdate);
+        return null;
+    }
     protected function __setBirthdate($arg){
         $newBirthdate = $arg;
 
@@ -246,7 +251,8 @@ class humans extends objects {
         else 
             $str.="\t\t";
         if(!is_null($this->_array['birthdate']))            
-            $str.= "\t birthdate : " . date('Y-m-d', $this->birthdate);
+//            $str.= "\t birthdate : " . date('Y-m-d', $this->birthdate);
+            $str.= "\t birthdate : " . $this->dateOfBirth;
         else 
             $str.="\t\t";
         if(!is_null($this->_array['dead'])){
