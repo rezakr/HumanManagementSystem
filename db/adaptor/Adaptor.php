@@ -6,19 +6,22 @@ namespace db\adaptor;
  * @author reza
  */
 
-define('__NumberOfTriesForLuck',16); 
+define('__NumberOfTriesForLuck',1); 
 
 abstract class Adaptor {
     protected $_path;
     protected $_array;
     protected $_file;
+    protected $_lock=false;
     public function __construct($filePath) {
         $this->_array = array();
         $this->_path=$filePath;
         // should load the path to $db, but for now it's just an empty array
         $this->_updateArray();
     }
-    
+    public function __destruct(){
+        $this->_unlockDB();
+    }
     abstract protected function _encode($array);
 
     abstract protected function _decode($array);
@@ -46,14 +49,21 @@ abstract class Adaptor {
     
     protected function _lockDB(){
         $tempLock = false;
-        $this->_file = fopen($this->_path,'a'); 
+        if($this->_lock)
+            return $this->_lock;
+        $this->_file = fopen($this->_path,'a');  
         $tempLock= flock($this->_file, LOCK_EX);
+        $this->_lock = $tempLock;
         return $tempLock;
     }
     protected function _unlockDB(){
+        if(is_null($this->_file))
+            return;
         if(file_exists($this->_path)){
+            $this->_lock = false;
             flock($this->_file, LOCK_UN);
             fclose($this->_file); 
+            $this->_file = null;
         }else{
             //Error in unlocking the wrong file
         }
@@ -84,7 +94,7 @@ abstract class Adaptor {
     public function add($data){
         // should I check the structure of $data too?
         $this->_array[]=$data;
-        return sizeof($this->_array);
+        return (sizeof($this->_array)-1);
     }
     
     public function update($id, $data){

@@ -13,18 +13,53 @@ namespace db;
 class controller {
     protected $_result;
     protected $_repository;
-    public function __construct(){
+    protected $_arguments;
+    
+    public function __construct($arguments = null){
         $this->_repository = new \db\model\repository();
-
+        $this->_arguments = array();
+        $this->setRequestParameters($arguments);
+    }
+    
+    public function getRequestParameters() {
+        return $this->_arguments;
+    }
+    public function setRequestPostParameters($arguments){
         $this->_result['error'] = false;
         $this->_result['body'] = "Working in construct of controller\n";
         $this->_result['message'] = "";
+
+        if (!is_null($arguments) && is_array($arguments)){
+            $temp=array();
+            if(!empty($arguments))
+                foreach ($arguments as $key => $value) {
+                    if($value=="")
+                        $temp[] = $key."=null";
+                    else
+                        $temp[] = $key."=".$value;
+                }
+            $this->_arguments = $temp;
+        }        
+        
     }
-    public function __destroy(){
-        echo "here to destroy";
+    public function setRequestParameters($arguments){
+        $this->_result['error'] = false;
+        $this->_result['body'] = "Working in construct of controller\n";
+        $this->_result['message'] = "";
+
+        if (!is_null($arguments) && is_array($arguments)){
+            $this->_arguments = $arguments;
+        }        
     }
-    public function create($argv){
-        parse_str(implode('&', $argv),$arguments);
+    public function __destruct(){
+        $this->_repository->cancelChanges();
+    }
+    public function render($view){
+        include $view;
+    }
+    public function create(){
+        var_dump(implode('&', $this->getRequestParameters()));
+        parse_str(implode('&', $this->getRequestParameters()),$arguments);
         // Have to check to the arguements;
         
         $refinedArguments = $this->__refine($arguments);
@@ -33,11 +68,16 @@ class controller {
         $id = $newPerson->save();
         $this->_result['id'] = $id;
         $this->_result['body'] = "Person named $newPerson->fname was created with the ID $id";
-        
         return $this->_result;
     }
     
-    public function update($id,$argv){
+    public function update($id){
+        $argv = $this->getRequestParameters();
+        if(!is_numeric($id)){
+            $this->_result['error'] = true;
+            $this->_result['message'] = "Wrong Argument, there's no ID";            
+            return $this->_result;
+        }
         parse_str(implode('&', $argv),$arguments);
         try{
             $updatePerson = $this->_repository->get($id);
@@ -45,9 +85,7 @@ class controller {
             $this->_result['error'] = true;
             $this->_result['message'] = $e->getMessage();
             return $this->_result;
-        }    
-
-        
+        }
         if(empty($arguments)){
             $this->_result['error'] = true;
             $this->_result['message'] = "No argument given";
@@ -100,7 +138,19 @@ class controller {
         return $this->_result;
             
     }
-    public function show($id, $argv) {
+    public function show($id=null){
+        $argv = $this->getRequestParameters();
+        if(is_null($id))
+            $id = "all";
+        if(!is_numeric($id)){
+            if($id == "all")
+                $result = $this->showAll();
+            else{
+                $result['error'] = true;
+                $result['message'] = "Wrong Argument, can't work with show $id";
+            }
+            return $result;
+        }
         try{
             $showPerson = $this->_repository->get($id);
         }catch(\Exception $e){
@@ -110,6 +160,7 @@ class controller {
         }    
         if(empty($argv)){
             $this->_result['body'] = "".$showPerson;
+            $this->_result['result'] = $showPerson;
         }else{
             $functionName = array_shift($argv);
             
@@ -192,8 +243,6 @@ class controller {
                     break;
             }
         }
-        
-        
         return $refinedArray;
     }
     

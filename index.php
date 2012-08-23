@@ -15,65 +15,93 @@
 
         ini_set('display_startup_errors', '1');
         ini_set('display_errors', '1');
-    ?>
+        ?>
 
     <?php
     echo '<br/>';
-    $r=new db\model\repository();
-//    $person = $r->create();
-//    $person=$r->get(2);
-//    $person->fname = "nemidonam";
-//    $person->lname = "chi";
-//    $person->gender = 0;
-//    $time = new DateTime('1990-12-12');
-//    $person->birthdate = $time->getTimestamp();
-//    $person->dead = 1;
-//    $person->save();
+    $argString=str_replace("/"," ",$_SERVER['QUERY_STRING']);
+    $argString=trim(str_replace("&"," ",$argString));
     
-    
-    $time = new DateTime('1960-12-12');
-    $person3 = $r->get(1);
-    $person2 = $r->get(3);
-    echo "Hi " . $person3->oldestBrother . "\n";
-    try{
-//    $person2->birthdate = $time->getTimestamp();
+    if(empty($argString)){
+        $argString= "show all";
     }
-    catch (\Exception $e){
-        echo $e->getMessage();
-    }
-//    $person2->birthdate = 11021;//time() - (30)* (3600*24*365);
-//    $person2->save();
-    
-    
-//    $person2->fname = 'reza';
-//    $person2->lname = 'k';
-//    $person2->gender = 1;
-    
-//    $person2->save();
-    
-//    $person = $r->create();
-//    $person->fname = 'sarah';
-//    $person->lname = 'babaei';
-//    $person2->adopt($person);
-//    $person->save();
-/*    for ($index = 3; $index < 4; $index++) {
-        $person = $r->get($index);
-//        $person->gender = 0;
-        $person->fatherID = 7;
-        $person->motherID = 8;
-        $person->save();
-    }*/
-    
-    $test=$person2->children;
-    foreach ($test as $t) {
-        echo $t.'<br/>';
-    }
+    $arguments = explode(" ",$argString);
 
-    echo 'SONS :';
-    $test=$person2->sons;
-    foreach ($test as $t) {
-        echo $t.'<br/>';
+    $controller = new db\controller($arguments);
+    $command = array_shift($arguments);
+    $link = "Location: /index.php";
+    switch ($command) {
+        case "new":
+            $controller->render('view/new.php');
+            break;
+        case "create":
+            if($_SERVER['REQUEST_METHOD'] == "POST"){
+                $new = $_POST;
+                $controller->setRequestPostParameters($new);
+                $result= $controller->create();
+                if($result['error'])
+                    continue;
+                $id=$result['id'];
+                $link = "Location: /index.php/show/$id/";
+                header ($link);
+            }
+            break;
+        case "edit":
+            $id = (int)array_shift($arguments);
+            $controller->setRequestParameters($arguments);
+            $result=$controller->show($id);
+            if($result['error'])
+                continue;
+            $param['id']=$id;
+            $param['fname']=$result['result']->fname;
+            $param['lname']=$result['result']->lname;
+            $param['gender']=$result['result']->gender;
+            $param['motherID']=$result['result']->motherID;
+            $param['fatherID']=$result['result']->fatherID;
+            $param['birthdate']=date('y-m-d', $result['result']->birthdate);
+            $param['dead']=$result['result']->dead;
+            include('view/edit.php');
+
+            var_dump($param);
+            break;
+        case "update":
+            if($_SERVER['REQUEST_METHOD'] == "POST"){
+                $id=$_POST['id'];
+                $edit = $_POST;
+                $controller->setRequestPostParameters($edit);
+                $result = $controller->update($id);
+                if($result['error'])
+                    continue;
+                $id=$edit['id'];
+                $link = "Location: /index.php/show/$id/";
+                header ($link);
+            }
+            break;
+        case "show":
+            $id = array_shift($arguments);
+            $controller->setRequestParameters($arguments);
+            if(is_numeric($id))
+                $id=(int)$id;
+            else
+                $id="all";
+            $result = $controller->show($id);
+            if($result['error']) continue;
+            if(!is_array($result['result'])){
+                $params[]=$result['result'];
+            }else
+                $params=$result['result'];                
+            foreach ($params as $param) {
+                include 'view/show.php';
+            }
+
+            break;
+        case "help":
+            $result['error'] = false;
+        default:
+            break;
     }
-?>
-        </pre>
+    if ($result['error'])
+        echo $result['message']."\n";
+    ?>
+    </pre>
 </body>
