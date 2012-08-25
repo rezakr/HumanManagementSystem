@@ -233,7 +233,7 @@ class controller {
                 // Should check for father and mother in DB?
                 case "fatherID":
                 case "motherID":
-                    if(is_int($value)){
+                    if(is_numeric($value)){
                         $newValue = (int)$value;
                         $refinedArray[$key]=$newValue;
                     }

@@ -41,9 +41,7 @@ abstract class objects {
     public function save(){
         $id = $this->_id;
         if(is_null($this->_id)){
-            var_dump($this->_array);
-            $id = $this->_id=$this->_db->add($this->_array);
-            
+            $id = $this->_id=$this->_db->add($this->_array);            
         }
         else
             $this->_db->update($this->_id,$this->_array);
@@ -81,9 +79,6 @@ abstract class objects {
             $this->_array[$key] = $value;
         }
     }
-
-
-
 }
 
 ?>

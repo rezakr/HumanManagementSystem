@@ -30,10 +30,10 @@
     $command = array_shift($arguments);
     $link = "Location: /index.php";
     $result['error']=false;
+    $param['title']="index";
+    $param['action']="/index.php/";
+//    $param['human']=null;
     switch ($command) {
-        case "new":
-            $controller->render('view/new.php');
-            break;
         case "create":
             if($_SERVER['REQUEST_METHOD'] == "POST"){
                 $new = $_POST;
@@ -44,26 +44,13 @@
                 $id=$result['id'];
                 $link = "Location: /index.php/show/$id/";
                 header ($link);
+                continue;
             }
+            $param['title']="Create a new human";
+            $param['action']="/index.php/create/";
+            $controller->render('view/new.php',$param);
             break;
         case "edit":
-            $id = (int)array_shift($arguments);
-            $controller->setRequestParameters($arguments);
-            $result=$controller->show($id);
-            if($result['error'])
-                continue;
-            $param['id']=$id;
-            $param['fname']=$result['result']->fname;
-            $param['lname']=$result['result']->lname;
-            $param['gender']=$result['result']->gender;
-            $param['motherID']=$result['result']->motherID;
-            $param['fatherID']=$result['result']->fatherID;
-            $param['birthdate']=date('y-m-d', $result['result']->birthdate);
-            $param['dead']=$result['result']->dead;
-            $controller->render('view/edit.php', $param);
-            //include('view/edit.php');
-            break;
-        case "update":
             if($_SERVER['REQUEST_METHOD'] == "POST"){
                 $id=$_POST['id'];
                 $edit = $_POST;
@@ -75,6 +62,15 @@
                 $link = "Location: /index.php/show/$id/";
                 header ($link);
             }
+            $id = (int)array_shift($arguments);
+            $param['title']="Editing human id $id ";
+            $param['action']="/index.php/edit/";
+            $controller->setRequestParameters($arguments);
+            $result=$controller->show($id);
+            if($result['error'])
+                continue;
+            $param['human']=$result['result'];
+            $controller->render('view/edit.php',$param);
             break;
         case "show":
             $id = array_shift($arguments);
@@ -82,7 +78,7 @@
             if(is_numeric($id))
                 $id=(int)$id;
             else{
-                echo "<a href='/index.php/new/'>new person</a>";
+                echo "<a href='/index.php/create/'>new person</a>";
                 $id="all";
             }
             $result = $controller->show($id);
@@ -92,7 +88,8 @@
             }else
                 $params=$result['result'];                
             foreach ($params as $param) {
-                include 'view/show.php';
+                $show['human']=$param;
+                $controller->render('view/show.php',$show);
             }
 
             break;
@@ -105,6 +102,7 @@
                 ."show id sons/daughters/children/father/mother or more\n"
                 ."show id theOldestInFamily? or orphan?\n";
         default:
+            echo "$command is not defined";
             break;
     }
     if ($result['error'])
