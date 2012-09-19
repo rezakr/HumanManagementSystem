@@ -55,7 +55,6 @@ abstract class objects {
         $functionName = '__get'.ucwords($key);
         if(method_exists($this, $functionName))
                 return call_user_func(array($this, $functionName));
-                //return call_user_func('self::' . $functionName);
         if($key=='id' && (!is_null($this->_id)))
             return $this->_id;
         if(isset($this->_array[$key])){
@@ -72,7 +71,6 @@ abstract class objects {
         $functionName = '__set'.ucwords($key);
         if(method_exists($this, $functionName))
                 return call_user_func(array($this, $functionName),$value);
-                //return call_user_func('self::' . $functionName);
 
         if(array_key_exists($key, $this->_array))
         {

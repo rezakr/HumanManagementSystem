@@ -6,7 +6,7 @@ namespace db\adaptor;
  * @author reza
  */
 
-define('__NumberOfTriesForLuck',1); 
+define('__NumberOfTriesForLuck',5); 
 
 abstract class Adaptor {
     protected $_path;
@@ -39,8 +39,11 @@ abstract class Adaptor {
     }
     
     protected function _updateArray(){
-        if(file_exists($this->_path)){
-            $fileContent = file_get_contents($this->_path);
+        if(file_exists($this->_path)){            
+            $fileContent = "";
+            if($this->_file!=null){
+                $fileContent = fread($this->_file,filesize($this->_path));
+            }
             $this->_array = $this->_decode($fileContent);
         }else{
             $this->_array = array();
@@ -48,10 +51,9 @@ abstract class Adaptor {
     }
     
     protected function _lockDB(){
-        $tempLock = false;
         if($this->_lock)
             return $this->_lock;
-        $this->_file = fopen($this->_path,'a');  
+        $this->_file = fopen($this->_path,'rb+');
         $tempLock= flock($this->_file, LOCK_EX);
         $this->_lock = $tempLock;
         return $tempLock;
@@ -114,7 +116,9 @@ abstract class Adaptor {
     }
 
     public function save(){
-        file_put_contents($this->_path, $this->_encode($this->_array));        
+        rewind($this->_file);
+ //       fseek($this->_file, 0);
+        fwrite($this->_file,$this->_encode($this->_array));
     }
     
     public function recursiveFind($array, $params){
