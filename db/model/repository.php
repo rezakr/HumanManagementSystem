@@ -12,11 +12,14 @@ namespace db\model;
  */
 class repository {
     protected $_repository;
+    protected $_modelName;
     protected $_filepath = 'db/repository.db';
     protected $_hasLock = false;
 
     //or db. I'll think on it after doing this.
-    public function __construct() {
+    public function __construct($modelName) {
+        $this->_filepath = "db/$modelName.db";
+        $this->_modelName = "\\db\\model\\$modelName";
         $database = new \db\adaptor\Json($this->_filepath);
         $this->_repository = $database;
     }
@@ -40,7 +43,7 @@ class repository {
     public function create($array = null){
         $lock = $this->__getLock();
 
-        $temp = new humans($this->_repository,$array);
+        $temp = new $this->_modelName($this->_repository,$array);
         //Change lock to some other function;
         return $temp;
     }
@@ -52,7 +55,7 @@ class repository {
         if(empty($array))
             return array();
         foreach ($array as $key => $arr) {
-            $tempArray[]=new humans($this->_repository,$arr, $key);
+            $tempArray[]=new $this->_modelName($this->_repository,$arr, $key);
             
         }
         return $tempArray;  
@@ -64,7 +67,7 @@ class repository {
         if(empty($array))
             throw new \Exception("$id was not found");
         else{
-            $temp = new humans($this->_repository,$array,$id);
+            $temp = new $this->_modelName($this->_repository,$array,$id);
             return $temp;
         }
         

@@ -24,19 +24,8 @@
     || define('APPLICATION_VIEW_PATH', realpath(dirname(__FILE__) . '/view/'));
 
     echo '<br/>';
-    $argString=str_replace("/"," ",$_SERVER['QUERY_STRING']);
-    $argString=trim(str_replace("&"," ",$argString));
-    if(empty($argString)){
-        $argString= "";
-    }
-    $arguments = explode(" ",$argString);
-    $filename = array_shift($arguments);
-
-    if(empty($arguments))
-        $arguments[] = 'index';
-    $controller = "db\\controller\\".array_shift($arguments)."Controller";
-    $myController = new $controller($arguments);
+    $myLaunch = new lanucher();
+    $myLaunch->run();
 //    $myController = new db\controller\indexController($arguments);
-
     ?>
 </body>

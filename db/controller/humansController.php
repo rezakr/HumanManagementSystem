@@ -7,11 +7,11 @@ namespace db\controller;
  */
 
 /**
- * Description of indexController
+ * Description of humansController
  *
  * @author reza
  */
-class indexController extends actionController{
+class humansController extends actionController{
     
     public function showAction($param=null){
         $id = $param[0];
@@ -93,11 +93,11 @@ class indexController extends actionController{
             $this->_view['id'] = $newPerson->save();
             $this->_view['body'] = "Person named $newPerson->fname was created with the ID $id";
             $id=$this->_view['id'];
-            $link = "Location: /index/show/$id/";
+            $link = "Location: /humans/show/$id/";
             header ($link);
         }
         $this->_view['title']="Create a new human";
-        $this->_view['action']="/index/create/";      
+        $this->_view['action']="/humans/create/";      
     }
     public function editAction($param){
         if($_SERVER['REQUEST_METHOD'] == "POST"){
@@ -158,7 +158,7 @@ class indexController extends actionController{
 
             if($this->_view['error'])
                 return;
-            $link = "Location: /index/show/$id/";
+            $link = "Location: /humans/show/$id/";
             header ($link);
         }
         $id = $param[0];
@@ -168,7 +168,7 @@ class indexController extends actionController{
             return;
         }
         $this->_view['title']="Editing human id $id ";
-        $this->_view['action']="/index/edit/";
+        $this->_view['action']="/humans/edit/";
         try{
             $updatePerson = $this->_repository->get($id);
         }catch(\Exception $e){

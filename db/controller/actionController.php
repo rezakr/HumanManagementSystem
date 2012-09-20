@@ -17,9 +17,8 @@ class actionController{
     protected $_baseName;
     public function __construct($arguments = null){
         $this->_baseName = lcfirst(basename(get_class($this),"Controller"));
-
-        $this->_repository = new \db\model\repository();
-        echo "<a href='/index/create/'>new person</a>";
+        $this->_repository = new \db\model\repository($this->_baseName);
+        echo "<a href='/$this->_baseName/create/'>Create a new $this->_baseName</a>";
 
         $this->_arguments = array();
         $id = null;
@@ -58,8 +57,7 @@ class actionController{
         }
         else{
             $this->_view['error']=true;
-            $parts = Explode("\\", __FILE__);
-            $this->_view['errorMessage']="There's no action for $method in ".$parts[count($parts) - 1];        
+            $this->_view['errorMessage']="There's no action for $method in $this->_baseName";        
             $this->_view['file']=APPLICATION_VIEW_PATH."/error.php";
             $this->render($this->_view['file'], $this->_view);
         }
@@ -77,7 +75,6 @@ class actionController{
                 die();
             }                           
         }
-
         include $view;
         if($param['error']){
             die();
