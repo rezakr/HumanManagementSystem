@@ -47,6 +47,12 @@ class repository {
         //Change lock to some other function;
         return $temp;
     }
+    public function delete($id){
+        $lock = $this->__getLock();
+        
+        $this->_repository->delete($id);
+        $this->_repository->save();
+    }
 
     public function getAll(){
         $lock = $this->__getLock();

@@ -65,7 +65,7 @@ class boxesController extends actionController{
             $edit = $_POST;
             $argv = $this->getRequestParameters();
             try{
-                $updatePerson = $this->_repository->get((int)$id);
+                $update= $this->_repository->get((int)$id);
             }catch(\Exception $e){
                 $this->_view['error'] = true;
                 $this->_view['errorMessage'] = $e->getMessage();
@@ -74,8 +74,8 @@ class boxesController extends actionController{
             $this->setRequestPostParameters($edit);
             $argv=$this->getRequestParameters();
             parse_str(implode('&', $argv),$arguments);
-            $updatePerson->update($arguments); 
-            $updatePerson->save();
+            $update->update($arguments); 
+            $update->save();
             $link = "Location: /boxes/show/$id/";
             header ($link);
         }
@@ -96,6 +96,14 @@ class boxesController extends actionController{
             return;
         }
 
+    }
+    
+    public function deleteAction($param){
+        $id = $param[0];
+        $this->_repository->delete((int)$id);
+        $link = "Location: /boxes/";
+        header ($link);
+        
     }
 }
 
